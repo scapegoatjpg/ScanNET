@@ -1,20 +1,24 @@
 import tkinter as tk
 from tkinter import *
+from tkinter import ttk
 
 class GUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.geometry('500x500')
+        self.root.title("ScanNET")
+        #all widths and heights aren't official, most likely change
+        self.root.minsize (600, 500)
 
-        #textboxes
-        first_textbox = Text(self.root, width=50, height=20, bg="yellow")
-        second_textbox = Text(self.root, width=25, height=10, bg="blue")
-        third_textbox = Text(self.root, width=25, height=10, bg="red")
-
-        #pack it all up
-        first_textbox.grid(column=1, row=1, rowspan=2)
-        second_textbox.grid(column=2, row=1)
-        third_textbox.grid(column=2, row=2)
+        #the tabs
+        my_notebook = ttk.Notebook(self.root)
+        my_notebook.pack()
+        devicestab = Frame(my_notebook, width=600, height=500, bg="blue")
+        reportstab = Frame(my_notebook, width=600, height=500, bg="red")
+        devicestab.pack(fill="both", expand=1)
+        reportstab.pack(fill="both", expand=1)
+        my_notebook.add(devicestab, text="Devices")
+        my_notebook.add(reportstab, text="Reports")
+        
         
     def start(self):
         self.root.mainloop()
