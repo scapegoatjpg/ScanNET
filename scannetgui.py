@@ -1,6 +1,8 @@
 import tkinter as tk
 import tkinter.messagebox
 from tkinter import ttk
+import network_scanner
+import threading
 
 LARGE_FONT = ("Verdana", 22)
 fakeloginsfornow = {
@@ -52,6 +54,7 @@ class Loginpage(tk.Frame):
                 try:
                     if p in fakeloginsfornow[u]:
                         controller.show_frame(GUI)
+                        scanthread.start()
                 except KeyError:
                     tkinter.messagebox.showerror("Error", "Wrong credentials, please try again.")
                     resetting()
@@ -74,7 +77,6 @@ class Loginpage(tk.Frame):
                     tkinter.messagebox.showinfo("Register", "Register successful.")
                     printlogins()
 
-
         def registering():
             regwin = new_window(self)
             regwin.title("Register for ScanNET")
@@ -93,7 +95,6 @@ class Loginpage(tk.Frame):
             passentry.pack()
             tk.Label(regwin, text="").pack()
             tk.Button(regwin, text="Register", width=10, height=1, command=lambda: registeruser(self, newuser, newpass)).pack()
-
         
         def resetting():
             self.username.set('')
@@ -152,7 +153,8 @@ class GUI(tk.Frame):
     def __init__(self, parent, controller):
         #all widths and heights aren't official, most likely change
         tk.Frame.__init__(self, parent)
-        
+        #network_scanner.netting()
+
         #the tabs
         my_notebook = ttk.Notebook(self)
         my_notebook.grid()
@@ -175,5 +177,13 @@ class GUI(tk.Frame):
         reportsright= tk.LabelFrame(reportstab, text="Charts and Diagrams: ", padx=5, pady=5, width=400 , height=600, bg='darkseagreen3')
         reportsright.grid(row=0, column=1)
 
-app = Pages()
-app.mainloop()
+#threads so that two different processes can go at the same time
+def backthread():
+    network_scanner.netting()
+def forethread():
+    app = Pages()
+    app.mainloop()
+
+scanthread = threading.Thread(target=backthread)
+guithread = threading.Thread(target=forethread)
+guithread.start()
