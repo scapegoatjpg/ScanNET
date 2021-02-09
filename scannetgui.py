@@ -15,6 +15,7 @@ class Pages(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
 
+        self.iconbitmap(r'snicon.ico')
         self.winfo_toplevel().title("ScanNET")
         self.wm_minsize(800, 600)
         self.wm_maxsize(800, 600)
@@ -79,6 +80,7 @@ class Loginpage(tk.Frame):
 
         def registering():
             regwin = new_window(self)
+            regwin.iconbitmap(r'snicon.ico')
             regwin.title("Register for ScanNET")
             regwin.geometry("600x400")
             newuser = tk.StringVar()
