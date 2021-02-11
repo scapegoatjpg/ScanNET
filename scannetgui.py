@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.messagebox
 from tkinter import ttk
-import network_scanner
+import sniffing
 import threading
 
 LARGE_FONT = ("Verdana", 22)
@@ -55,7 +55,7 @@ class Loginpage(tk.Frame):
                 try:
                     if p in fakeloginsfornow[u]:
                         controller.show_frame(GUI)
-                        scanthread.start()
+                        sniffthread.start()
                 except KeyError:
                     tkinter.messagebox.showerror("Error", "Wrong credentials, please try again.")
                     resetting()
@@ -155,7 +155,6 @@ class GUI(tk.Frame):
     def __init__(self, parent, controller):
         #all widths and heights aren't official, most likely change
         tk.Frame.__init__(self, parent)
-        #network_scanner.netting()
 
         #the tabs
         my_notebook = ttk.Notebook(self)
@@ -181,11 +180,11 @@ class GUI(tk.Frame):
 
 #threads so that two different processes can go at the same time
 def backthread():
-    network_scanner.netting()
+    sniffing.net()
 def forethread():
     app = Pages()
     app.mainloop()
 
-scanthread = threading.Thread(target=backthread)
+sniffthread = threading.Thread(target=backthread)
 guithread = threading.Thread(target=forethread)
 guithread.start()
