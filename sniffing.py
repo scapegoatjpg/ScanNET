@@ -97,7 +97,7 @@ def write_packets(writer):
     for timestamp, packet in pc:
         counter += 1
         writer.writepkt(packet, timestamp)
-        #20 packets at a time
+        #one packet at a time
         if counter == 1:
             writer.close()
             break
@@ -117,5 +117,3 @@ def net():
                 print_packets(pcap)
         except KeyboardInterrupt:
             break
-
-#net()
