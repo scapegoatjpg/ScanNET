@@ -5,65 +5,91 @@ import socket
 from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
 
+class Packet():
+    pack = ''
+    hostname = ''
+    num = 0
+    ts = ''
+    macsrc = ''
+    macdst = ''
+    src = ''
+    dst = ''
+    sport = 0
+    dport = 0
+    ipv = ''
+    prtcl = ''
+    length = 0
+    info = ''
+
+#list to send and update for the gui
+pkt_list = []
+#global counter to count every packet read
+pktnum = 0
+
 def print_packets(pcap):
     for timestamp, buf in pcap:
         eth = dpkt.ethernet.Ethernet(buf)
 
+        #assigned anything applicable right away
+        pkt = Packet
+        pkt.pack = eth.data
+        global pktnum
+        pkt.num = pktnum
+        pkt.ts = str(datetime.datetime.utcfromtimestamp(timestamp))
+        pkt.sport = 0
+        pkt.dport = 0
+        pkt.length = len(eth.data)
+        pktnum += 1
+
         #for ipv6 packets
         if isinstance(eth.data, dpkt.ip6.IP6):
             ipv6 = eth.data
-
-            print('Timestamp: ', str(datetime.datetime.utcfromtimestamp(timestamp)))
-            print('Ethernet Frame: ', mac_to_str(eth.data.src), mac_to_str(eth.data.dst), eth.type)
-            print('IPv6: %s -> %s' % (inet_to_str(ipv6.src), inet_to_str(ipv6.dst)))
-
-            if isinstance(ipv6.data, dpkt.icmp6.ICMP6):
-                icmp6 = ipv6.data
-                print('ICMP6: type:%d code:%d checksum:%d data: %s' % (icmp6.type, icmp6.code, icmp6.sum, repr(icmp6.data)))
+            
+            pkt.macsrc = mac_to_str(ipv6.src)
+            pkt.macdst = mac_to_str(ipv6.dst)
+            pkt.src = inet_to_str(ipv6.src)
+            pkt.dst = inet_to_str(ipv6.dst)
 
         #for ipv4 packets
-        if isinstance(eth.data, dpkt.ip.IP):
+        elif isinstance(eth.data, dpkt.ip.IP):
             ip = eth.data
-
+            
+            pkt.macsrc = mac_to_str(ip.src)
+            pkt.macdst = mac_to_str(ip.dst)
+            pkt.src = inet_to_str(ip.src)
+            pkt.dst = inet_to_str(ip.dst)
+            
             #frag stuff
-            do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
-            more_fragments = bool(ip.off & dpkt.ip.IP_MF)
-            fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
-
-            #print first part of packet
-            print('Timestamp: ', str(datetime.datetime.utcfromtimestamp(timestamp)))
-            print('Ethernet Frame: ', mac_to_str(eth.data.src), mac_to_str(eth.data.dst), eth.type)
-            print('IPv4: %s -> %s (len=%d ttl=%d DF=%d MF=%d offset=%d)' % (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
+            #do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
+            #more_fragments = bool(ip.off & dpkt.ip.IP_MF)
+            #fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
 
             #for tcp packets
             if isinstance(ip.data, dpkt.tcp.TCP):
                 tcp = ip.data
-                print('Source Port: %d' % tcp.sport)
-                print('Destination Port: %d' % tcp.dport)
-
-            #for icmp packets
-            if isinstance(ip.data, dpkt.icmp.ICMP):
-                icmp = ip.data
-                print('ICMP: type:%d code:%d checksum:%d data: %s' % (icmp.type, icmp.code, icmp.sum, repr(icmp.data)))
+                pkt.sport = tcp.sport
+                pkt.dport = tcp.dport
 
             #for udp packets
             if isinstance(ip.data, dpkt.udp.UDP):
                 udp = ip.data
-                print('Source Port: %d' % udp.sport)
-                print('Destination Port: %d' % udp.dport)
-    
+                pkt.sport = udp.sport
+                pkt.dport = udp.dport
+
         #for arp packets (currently skipped)
         if isinstance(eth.data, dpkt.arp.ARP):
-            #print('Ignoring ARP packet %s\n' % eth.data.__class__.__name__)
-            arp = eth.data
-            print('ARP: %s\n' % arp.data)
+            pkt.prtcl = 'ARP'
+            pkt_list.append(pkt)
             continue
 
         #prints protocols
-        print('Internet Protocol version: %s' % eth.data.__class__.__name__)
-        print('Protocol: %s(%d)' % (eth.data.get_proto(eth.data.p).__name__, eth.data.p))
-        #print('Type: %s' % eth.data.type)
-        print('\n')
+        pkt.ipv = eth.data.__class__.__name__
+        try:
+            pkt.prtcl = eth.data.get_proto(eth.data.p).__name__
+        except AttributeError:
+            pass
+
+        pkt_list.append(pkt)
 
 def write_packets(writer):
     pc = pcap.pcap()
@@ -72,7 +98,7 @@ def write_packets(writer):
         counter += 1
         writer.writepkt(packet, timestamp)
         #20 packets at a time
-        if counter == 20:
+        if counter == 1:
             writer.close()
             break
 
@@ -91,3 +117,5 @@ def net():
                 print_packets(pcap)
         except KeyboardInterrupt:
             break
+
+#net()
