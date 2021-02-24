@@ -21,7 +21,6 @@ class Pages(tk.Tk):
         self.iconbitmap(r'snicon.ico')
         self.winfo_toplevel().title('ScanNET')
         self.wm_minsize(800, 600)
-        self.wm_maxsize(800, 600)
 
         container = tk.Frame(self)
 
@@ -32,7 +31,7 @@ class Pages(tk.Tk):
         for F in (Loginpage, GUI):
             frame = F(container, self)
             self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky='NESW')
+            frame.grid(row=0, column=0, sticky='nesw')
 
         self.show_frame(Loginpage)
         
@@ -128,9 +127,9 @@ class Loginpage(tk.Frame):
         loginlabel.grid(row=0, column=0, columnspan=2, pady=40)
 
         #=====frames
-        loginframe1 = tk.LabelFrame(self, width=800, height=600, bd=20, bg='darkseagreen3')
+        loginframe1 = tk.LabelFrame(self, bd=20, bg='darkseagreen3')
         loginframe1.grid(row=1, column=0)
-        loginframe2 = tk.LabelFrame(self, width=600, height=400, bd=20, bg='darkseagreen3')
+        loginframe2 = tk.LabelFrame(self, bd=20, bg='darkseagreen3')
         loginframe2.grid(row=2, column=0)
 
         #=====Label and Entry
@@ -162,47 +161,44 @@ class GUI(tk.Frame):
             while True:
                 #continously checks if anything is added into the pkt_list queue. Packets are added from sniffing thread 
                 #prints packet info into console, otherwise prints no packet info
+                #printing on console is just for testing purposes
                 print('Checking for feed...')
                 if len(pkt_list) != 0:
                     print('Updating feed...')
                     pktmp = pkt_list.pop(0)
-                    print('No.: ', pktmp.num)
-                    print('Length: ', pktmp.length)
-                    print('Timestamp: ', pktmp.ts)
-                    print('Ethernet Frame: ', pktmp.macsrc, pktmp.macdst)
-                    print('%s: %s -> %s' % (pktmp.ipv, pktmp.src, pktmp.dst))
-
+                    pktstr = 'No.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + pktmp.ts + '\nEthernetFrame: ' + pktmp.macsrc + ' ' + pktmp.macdst + '\n' + pktmp.ipv + ': ' + pktmp.src + ' -> ' + pktmp.dst
+                    
                     if (pktmp.sport != 0) or (pktmp.dport != 0):
                         try:
-                            print('Source Port: %d' % pktmp.sport)
-                            print('Destination Port: %d' % pktmp.dport)
+                            pktstr = pktstr + '\nSource Port: ' + str(pktmp.sport) + '\nDestination Port: ' + str(pktmp.dport)
+                            
                         except AttributeError:
                             pass
                         
                     if (pktmp.prtcl == 'ICMP6') or (pktmp.prtcl == 'ICMP'):
                         try:
-                            print('%s: type:%d code:%d checksum:%d data: %s' % (pktmp.prtcl, pktmp.pack.type, pktmp.pack.code, pktmp.pack.sum, repr(pktmp.pack.data)))
+                            pktstr = pktstr + pktmp.prtcl + ': type:' + str(pktmp.pack.type) + ' code:' + str(pktmp.pack.code) + ' checksum:' + str(pktmp.pack.sum) + ' data: ' + repr(pktmp.pack.data)
+                            
                         except AttributeError:
                             pass
-                        
+                    print(pktstr)
+                    listing.insert('end', pktstr + '\n')
+                    listing.see('end')
                     print('Feed updated!\n')
 
                 else:
                     time.sleep(0.5)
                     print('No feed to update.\n')
-        #thread for updating packet info starts when scannetgui.py is executued, but won't print any packets since sniffing thread begins once successfully logged in
-        updatethread = threading.Thread(target=updatefeed)
-        updatethread.start()
 
         tk.Frame.__init__(self, parent)
 
         #the tabs
         my_notebook = ttk.Notebook(self)
         my_notebook.grid()
-        devicestab = tk.Frame(my_notebook, width=800, height=600)
-        reportstab = tk.Frame(my_notebook, width=800, height=600)
-        devicestab.pack(fill='both', expand=1)
-        reportstab.pack(fill='both', expand=1)
+        devicestab = tk.Frame(my_notebook)
+        reportstab = tk.Frame(my_notebook)
+        devicestab.pack(fill='both', expand=True)
+        reportstab.pack(fill='both', expand=True)
         my_notebook.add(devicestab, text='Devices')
         my_notebook.add(reportstab, text='Reports')
 
@@ -212,11 +208,22 @@ class GUI(tk.Frame):
         devicesright = tk.LabelFrame(devicestab, text='Activity Feed: ', padx=5, pady=5, width=300 , height=600, bg='darkseagreen3')
         devicesright.grid(row=0, column=1)
 
+        scrolling = tk.Scrollbar(devicesright)
+        listing = tk.Text(devicesright, wrap='word', yscrollcommand=scrolling)
+        scrolling.configure(command=listing.yview)
+
+        listing.grid(row=0, sticky='nesw')
+        scrolling.grid(row=0, column=1, sticky='ns')
+
         #contents for reports tab
         reportsleft = tk.LabelFrame(reportstab, text='Report Summaries: ', padx=5, pady=5, width=400 , height=600, bg='darkseagreen3')
         reportsleft.grid(row=0, column=0)
         reportsright= tk.LabelFrame(reportstab, text='Charts and Diagrams: ', padx=5, pady=5, width=400 , height=600, bg='darkseagreen3')
         reportsright.grid(row=0, column=1)
+        
+        #thread for updating packet info starts when scannetgui.py is executued, but won't print any packets since sniffing thread begins once successfully logged in
+        updatethread = threading.Thread(target=updatefeed)
+        updatethread.start()
     
 #threads so work different processes can go at the same time
 def backthread():
