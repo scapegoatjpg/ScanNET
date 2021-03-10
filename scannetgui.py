@@ -3,12 +3,12 @@ import tkinter.messagebox
 from tkinter import ttk
 import network_scanner
 import threading
+import DBconn
+
+
 
 LARGE_FONT = ("Verdana", 22)
-fakeloginsfornow = {
-    "laura115":"pass5",
-    "yeet":"whataburger_10"
-}
+
 
 class Pages(tk.Tk):
     #starts us off in the login page
@@ -41,41 +41,51 @@ class Loginpage(tk.Frame):
     def __init__(self, parent, controller):
         
         #=====button functions
-        def printlogins():
-            print (fakeloginsfornow)
+       
+        
 
         def validation(self, controller):
-            u = (self.username.get())
-            p = (self.password.get())
+            data = (
+                self.username.get(),
+                self.password.get()
+                )
+
+            #validations
             
-            if u == '' and p == '':
+            if self.username.get() == '' and self.password.get() == '':
                 tkinter.messagebox.showerror("Error", "Please enter your credentials.")
             else:   #try except so that we don't deal with KeyError
-                try:
-                    if p in fakeloginsfornow[u]:
-                        controller.show_frame(GUI)
-                        scanthread.start()
-                except KeyError:
+             
+               res = DBconn.user_login(data)
+               if res:
+                   tkinter.messagebox.showinfo("Message", "Login Successfully")
+                   controller.show_frame(GUI)
+                   scanthread.start()
+               else:
                     tkinter.messagebox.showerror("Error", "Wrong credentials, please try again.")
                     resetting()
         
-        def registeruser(self, user, passw):
+        def registeruser(self):
             print("registering this new user...")
-            u = (user.get())
-            p = (passw.get())
+            data = (
+                
+                self.username.get(),
+                self.password.get()
+                )
 
-            if u == '' or p == '':
-                tkinter.messagebox.showerror("Error", "Please enter your credentials.")
-                printlogins()
+            if self.username.get() == '' and self.password.get() == '':
+                tkinter.messagebox.showerror("Error", "Please enter your credentials.")    
             else:
-                if u in fakeloginsfornow:
-                    tkinter.messagebox.showerror("Error", "Username already taken, please use a different username.")
-                    user.set('')
-                    printlogins()
-                else:
-                    fakeloginsfornow[u] = p
-                    tkinter.messagebox.showinfo("Register", "Register successful.")
-                    printlogins()
+                
+               # check = DBconn.check_user(data)
+               # if check:
+                   # tkinter.messagebox.showerror("Error", "Username already taken, please use a different username.")
+                  #  user.set('')
+               # else:
+                res = DBconn.add_user(data)
+                if res:
+                      tkinter.messagebox.showinfo("Register", "Registration successful.")
+                   
 
         def registering():
             regwin = new_window(self)
@@ -88,13 +98,13 @@ class Loginpage(tk.Frame):
             tk.Label(regwin, text="").pack()
             
             tk.Label(regwin, text="Username").pack()
-            userentry = tk.Entry(regwin, textvariable=newuser)
+            userentry = tk.Entry(regwin, textvariable= self.username)
             userentry.pack()
             tk.Label(regwin, text="Password").pack()
-            passentry = tk.Entry(regwin, show='*',textvariable=newpass)
+            passentry = tk.Entry(regwin, show='*',textvariable= self.password)
             passentry.pack()
             tk.Label(regwin, text="").pack()
-            tk.Button(regwin, text="Register", width=10, height=1, command=lambda: registeruser(self, newuser, newpass)).pack()
+            tk.Button(regwin, text="Register", width=10, height=1, command=lambda: registeruser(self)).pack()
         
         def resetting():
             self.username.set('')
