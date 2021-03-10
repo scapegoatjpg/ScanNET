@@ -1,28 +1,38 @@
-import mysql.connector #pip install mysql-connector-python-rf
-from mysql.connector import Error
+import mysql.connector
 
-def create_connection(host_name, user_name, user_password, db_name):
-    connection = None
+#need to install mysql connector with pip install mysql-connector-python
+# need to download xampp software for mysql database
+#start apache server and mysql database
+#puts tables in a dictionary so that we can store them in the database after we know for sure there is a database
+
+con = mysql.connector.connect(
+    host = "localhost",
+    user = "root",
+    passwd = "",
+    database = "scannet"
+    )
+
+cursor = con.cursor()
+
+#function to access the database
+
+def user_login(tup):
     try:
-        connection = mysql.connector.connect(
-            host = host_name,
-            user = user_name,
-            passwd = user_password,
-            database = db_name
-        )
-        print("Connection to MySQL DB successful")
-    except Error as e:
-        print(f"The error '{e}' occurred")
+        cursor.execute("SELECT * FROM `customer` WHERE `username` =%s AND `password`=%s", tup)
+        return (cursor.fetchone())
+    except:
+        return False
 
-    return connection
+def add_user(tup):
+   
+    cursor.execute("INSERT INTO `customer`(`username`,`password`) VALUES ( %s, %s)",tup)
+    con.commit()
+    return True
 
-def create_database(connection, query):
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query)
-        print("Database created successfully")
-    except Error as e:
-        print(f"The error '{e}' occurred")
+#def check_user(tup):
+  # if cursor.execute("SELECT * FROM `customer` WHERE EXISTS `username`=%s AND `password`=%s",tup):
+
+       #return True
 
 
 
@@ -31,12 +41,3 @@ def create_database(connection, query):
 
 
 
-
-
-
-
-
-
-connection = create_connection("localhost", "root", "","ScanNet")
-create_database_query = "CREATE DATABASE ScanNet"
-create_database(connection, create_database_query)
