@@ -1,7 +1,11 @@
 import dpkt, pcap       #pip install dpkt and pip intall pypcap (just use the requirements.txt)
 import datetime
 import time
+from threading import Timer
 import socket
+import nmap
+import who_is_on_my_wifi
+from who_is_on_my_wifi import who
 from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
 
@@ -10,6 +14,7 @@ class Packet():
     hostname = ''
     num = 0
     ts = ''
+    timing = ''
     macsrc = ''
     macdst = ''
     src = ''
@@ -20,7 +25,20 @@ class Packet():
     prtcl = ''
     length = 0
     info = ''
+class Devs():
+    hostname = ''
+    timing = ''
+    ipaddr = ''
+    mac = ''
+    activity = ''
 
+#list to update active devices in gui
+recentdevs = []
+ips = []
+alldevs = []
+WHO = who()
+for i in range(0, len(WHO)):
+    alldevs.append(WHO[i][1])
 #list to send and update for the gui
 pkt_list = []
 #global counter to count every packet read
@@ -29,13 +47,13 @@ pktnum = 0
 def print_packets(pcap):
     for timestamp, buf in pcap:
         eth = dpkt.ethernet.Ethernet(buf)
-
         #assigned anything applicable right away
         pkt = Packet
         pkt.pack = eth.data
         global pktnum
         pkt.num = pktnum
         pkt.ts = str(datetime.datetime.utcfromtimestamp(timestamp))
+        pkt.timing = (str(datetime.datetime.now().hour)+':'+str(datetime.datetime.now().minute)+':'+str(datetime.datetime.now().second))
         pkt.sport = 0
         pkt.dport = 0
         pkt.length = len(eth.data)
