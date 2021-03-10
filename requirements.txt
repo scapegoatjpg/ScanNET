@@ -1,3 +1,6 @@
 pypcap
 dpkt
 datetime
+mysql-connector-python
+nmap
+who_is_on_my_wifi
