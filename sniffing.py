@@ -10,27 +10,29 @@ from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
 
 class Packet():
-    pack = ''
-    hostname = ''
-    num = 0
-    ts = ''
-    timing = ''
-    macsrc = ''
-    macdst = ''
-    src = ''
-    dst = ''
-    sport = 0
-    dport = 0
-    ipv = ''
-    prtcl = ''
-    length = 0
-    info = ''
+    def __init__(self):
+        self.pack = ''
+        self.hostname = ''
+        self.num = 0
+        self.ts = ''
+        self.timing = ''
+        self.macsrc = ''
+        self.macdst = ''
+        self.src = ''
+        self.dst = ''
+        self.sport = 0
+        self.dport = 0
+        self.ipv = ''
+        self.prtcl = ''
+        self.length = 0
+        self.info = ''
 class Devs():
-    hostname = ''
-    timing = ''
-    ipaddr = ''
-    mac = ''
-    activity = ''
+    def __init__(self):
+        self.hostname = ''
+        self.timing = ''
+        self.ipaddr = ''
+        self.mac = ''
+        self.activity = ''
 
 #list to update active devices in gui
 recentdevs = []
