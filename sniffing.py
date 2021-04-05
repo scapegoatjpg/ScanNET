@@ -34,6 +34,28 @@ class Devs():
         self.mac = ''
         self.activity = ''
 
+#packet counters
+class PktCount():
+    def __init__(self):
+        self.counter = 0
+        self.ipcounter = 0
+        self.nonipcounter = 0
+        self.tcpcounter = 0
+        self.udpcounter = 0
+        self.arpcounter = 0
+        self.httpcounter = 0
+        self.httpscounter = 0
+        self.smtpcounter = 0
+        self.dhcpcounter = 0 
+        self.ftpcounter = 0
+        self.sshcounter = 0
+        self.ntpcounter = 0 
+        self.telnetcounter = 0
+        self.whoiscounter = 0 
+        self.rsynccounter = 0
+        self.icmpcounter = 0 
+        self.ipv6counter = 0
+
 #list to update active devices in gui
 recentdevs = []
 ips = []
@@ -46,8 +68,13 @@ pkt_list = []
 #global counter to count every packet read
 pktnum = 0
 
+pktcounting = PktCount()
+
 def print_packets(pcap):
     for timestamp, buf in pcap:
+        global pktcounting
+        pktcounting.counter += 1
+        
         eth = dpkt.ethernet.Ethernet(buf)
         #assigned anything applicable right away
         pkt = Packet
@@ -61,8 +88,12 @@ def print_packets(pcap):
         pkt.length = len(eth.data)
         pktnum += 1
 
+        if eth.type != dpkt.ethernet.ETH_TYPE_IP and eth.type != dpkt.ethernet.ETH_TYPE_IP6:
+            pktcounting.nonipcounter += 1
+
         #for ipv6 packets
         if isinstance(eth.data, dpkt.ip6.IP6):
+            pktcounting.ipv6counter += 1
             ipv6 = eth.data
             
             pkt.macsrc = mac_to_str(ipv6.src)
@@ -79,10 +110,9 @@ def print_packets(pcap):
             pkt.src = inet_to_str(ip.src)
             pkt.dst = inet_to_str(ip.dst)
             
-            #frag stuff
-            #do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
-            #more_fragments = bool(ip.off & dpkt.ip.IP_MF)
-            #fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
+            pktcounting.ipcounter += 1
+            if ip.p == dpkt.ip.IP_PROTO_ICMP:
+                pktcounting.icmpcounter += 1
 
             #for tcp packets
             if isinstance(ip.data, dpkt.tcp.TCP):
@@ -90,14 +120,39 @@ def print_packets(pcap):
                 pkt.sport = tcp.sport
                 pkt.dport = tcp.dport
 
+                pktcounting.tcpcounter += 1
+                if tcp.sport == 80 or tcp.dport == 80:
+                    pktcounting.httpcounter += 1
+                elif tcp.sport == 443 or tcp.dport == 443:
+                    pktcounting.httpscounter += 1
+                elif tcp.sport == 22 or tcp.dport == 22:
+                    pktcounting.sshcounter += 1
+                elif tcp.sport == 25 or tcp.dport == 25:
+                    pktcounting.smtpcounter += 1
+                elif tcp.sport == 23 or tcp.dport == 23:
+                    pktcounting.smtpcounter += 1
+                elif tcp.sport == 43 or tcp.dport == 43:
+                    pktcounting.whoiscounter += 1
+                elif tcp.sport == 873 or tcp.dport == 873:
+                    pktcounting.rsynccounter += 1
+                elif tcp.sport == 21 or tcp.dport == 21:
+                    pktcounting.ftpcounter += 1
+
             #for udp packets
             if isinstance(ip.data, dpkt.udp.UDP):
                 udp = ip.data
                 pkt.sport = udp.sport
                 pkt.dport = udp.dport
 
+                pktcounting.udpcounter += 1
+                if udp.sport == 67 or udp.dport == 67 or udp.sport == 68 or udp.dport == 68:
+                    pktcounting.dhcpcounter += 1
+                elif udp.sport == 123 or udp.dport == 123:
+                    pktcounting.ntpcounter += 1
+
         #for arp packets (currently skipped)
         if isinstance(eth.data, dpkt.arp.ARP):
+            pktcounting.arpcounter += 1
             pkt.prtcl = 'ARP'
             pkt_list.append(pkt)
             continue
