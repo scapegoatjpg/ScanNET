@@ -2,10 +2,104 @@ import tkinter as tk
 import tkinter.messagebox
 from tkinter import ttk
 import sniffing
-from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs
+from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs, pktcounting
 import threading
 import DBconn
 from DBconn import *
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
+from matplotlib import style
+style.use('ggplot')
+
+#testing out figure sizes
+fig1 = Figure(figsize=(3,3), dpi=100)
+a1 = fig1.add_subplot(111)
+#fig2 = Figure(figsize=(5,5), dpi=100)
+#a2 = fig2.add_subplot(111)
+
+xPkts = []
+yIP = []
+yNONIP = []
+yTCP = []
+yUDP = []
+yARP = []
+yHTTP = []
+yHTTPS = []
+ySMTP = []
+yDHCP = []
+yFTP = []
+ySSH = []
+yNTP = []
+yTN = []
+yWHO = []
+yRSYNC = []
+yICMP = []
+yIPV6 = []
+
+def pktanimate(i):
+    xPkts.append(pktcounting.counter)
+    yIP.append(pktcounting.ipcounter)
+    yNONIP.append(pktcounting.nonipcounter)
+    yTCP.append(pktcounting.tcpcounter)
+    yUDP.append(pktcounting.udpcounter)
+    yARP.append(pktcounting.arpcounter)
+    yHTTP.append(pktcounting.httpcounter)
+    yHTTPS.append(pktcounting.httpscounter)
+    ySMTP.append(pktcounting.smtpcounter)
+    yDHCP.append(pktcounting.dhcpcounter)
+    yFTP.append(pktcounting.ftpcounter)
+    ySSH.append(pktcounting.sshcounter)
+    yNTP.append(pktcounting.ntpcounter)
+    yTN.append(pktcounting.telnetcounter)
+    yWHO.append(pktcounting.whoiscounter)
+    yRSYNC.append(pktcounting.rsynccounter)
+    yICMP.append(pktcounting.icmpcounter)
+    yIPV6.append(pktcounting.ipv6counter)
+
+    a1.clear()
+        
+    if pktcounting.ipcounter > 0:
+        a1.plot(xPkts, yIP, label="IP")
+    if pktcounting.nonipcounter > 0:
+        a1.plot(xPkts, yNONIP, label="Non-IP")
+    if pktcounting.tcpcounter > 0:
+        a1.plot(xPkts, yTCP, label="TCP")
+    if pktcounting.udpcounter > 0:
+        a1.plot(xPkts, yUDP, label="UDP")
+    if pktcounting.arpcounter > 0:
+        a1.plot(xPkts, yARP, label="ARP")
+    if pktcounting.httpcounter > 0:
+        a1.plot(xPkts, yHTTP, label="HTTP")
+    if pktcounting.httpscounter > 0:
+        a1.plot(xPkts, yHTTPS, label="HTTPS")
+    if pktcounting.smtpcounter > 0:
+        a1.plot(xPkts, ySMTP, label="SMTP")
+    if pktcounting.dhcpcounter > 0:
+        a1.plot(xPkts, yDHCP, label="DHCP")
+    if pktcounting.ftpcounter > 0:
+        a1.plot(xPkts, yFTP, label="FTP")
+    if pktcounting.sshcounter > 0:
+        a1.plot(xPkts, ySSH, label="SSH")
+    if pktcounting.ntpcounter > 0:
+        a1.plot(xPkts, yNTP, label="NTP")
+    if pktcounting.telnetcounter > 0:
+        a1.plot(xPkts, yTN, label="TelNet")
+    if pktcounting.whoiscounter > 0:
+        a1.plot(xPkts, yWHO, label="whois")
+    if pktcounting.rsynccounter > 0:
+        a1.plot(xPkts, yRSYNC, label="RSYNC")
+    if pktcounting.icmpcounter > 0:
+        a1.plot(xPkts, yICMP, label="ICMP")
+    if pktcounting.ipv6counter > 0:
+        a1.plot(xPkts, yIPV6, label="IPv6")
+
+    #a1.title('Packet Types')
+    a1.legend()
+
 LARGE_FONT = ("Verdana", 22)
 class Pages(tk.Tk):
     #starts us off in the login page
@@ -45,8 +139,6 @@ class Loginpage(tk.Frame):
             #validations
             if self.username.get() == '' and self.password.get() == '':
                 tkinter.messagebox.showerror("Error", "Please enter your credentials.")
-           
-
             else:   #try except so that we don't deal with KeyError
                res = user_login(data)
                if res:
@@ -66,14 +158,10 @@ class Loginpage(tk.Frame):
                 self.username.get(),
                 data2
                 )
-            
-                    
-
 
             if self.fname.get() == '' or self.lname.get() == '' or self.username.get() == '' or self.password.get() == '':
                 tkinter.messagebox.showerror("Error", "Please enter your credentials.")    
          
-
             else:
               res = add_user(data)
               if res:
@@ -266,7 +354,7 @@ class GUI(tk.Frame):
                                 for j in range(len(recentdevs)):
                                     a = recentdevs[j].ipaddr
                                     tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[j].ipaddr, command=lambda x=a: devwin(x)).grid(row=j, column=0)
-                        
+
         tk.Frame.__init__(self, parent)
 
         #the tabs
@@ -297,6 +385,25 @@ class GUI(tk.Frame):
         reportsright= tk.LabelFrame(reportstab, text='Charts and Diagrams: ', padx=5, pady=5, width=1 , height=1, bg='darkseagreen3')
         reportsright.grid(row=0, column=1)
         
+        reporting = tk.Text(reportsleft, width=40)
+        reporting.pack()
+        reporting.insert('end', 'What are we to ever do, my mind is lead and your a wall.')
+
+        cnvs1 = FigureCanvasTkAgg(fig1, reportsright)
+        cnvs1.draw()
+        cnvs1.get_tk_widget().pack(side='top')
+
+        da = [300, 500, 700]
+        my_labels = 'Tasks Pending', 'Tasks Ongoing', 'Task Completed'
+
+        fig2 = Figure(figsize=(3,3), dpi=100)
+        a2 = fig2.add_subplot(111)
+        a2.pie(da, labels=my_labels)
+        a2.axis('equal')
+
+        pie2 = FigureCanvasTkAgg(fig2, reportsright)
+        pie2.get_tk_widget().pack(side='bottom')
+
         #thread for updating packet info starts when scannetgui.py is executued, but won't print any packets since sniffing thread begins once successfully logged in
         updatethread = threading.Thread(target=updatepkts)
         updatethread.start()
@@ -306,6 +413,8 @@ def backthread():
     sniffing.net()
 def forethread():
     app = Pages()
+    ani1 = animation.FuncAnimation(fig1, pktanimate, interval=1550)
+    #ani2 = animation.FuncAnimation(fig2,)
     app.mainloop()
 
 sniffthread = threading.Thread(target=backthread)
