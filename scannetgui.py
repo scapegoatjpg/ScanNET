@@ -37,6 +37,7 @@ class Loginpage(tk.Frame):
         #=====button functions
         def validation(self, controller):
             data = (
+               
                 self.username.get(),
                 self.password.get()
                 )
@@ -44,6 +45,8 @@ class Loginpage(tk.Frame):
             #validations
             if self.username.get() == '' and self.password.get() == '':
                 tkinter.messagebox.showerror("Error", "Please enter your credentials.")
+           
+
             else:   #try except so that we don't deal with KeyError
                res = user_login(data)
                if res:
@@ -56,39 +59,51 @@ class Loginpage(tk.Frame):
         
         def registeruser(self):
             print("registering this new user...")
+            data2 = self.password.get()
             data = (
+                self.fname.get(),
+                self.lname.get(),
                 self.username.get(),
-                self.password.get()
+                data2
                 )
+            
+                    
 
-            if self.username.get() == '' and self.password.get() == '':
+
+            if self.fname.get() == '' or self.lname.get() == '' or self.username.get() == '' or self.password.get() == '':
                 tkinter.messagebox.showerror("Error", "Please enter your credentials.")    
+         
+
             else:
-               # check = DBconn.check_user(data)
-               # if check:
-                   # tkinter.messagebox.showerror("Error", "Username already taken, please use a different username.")
-                  #  user.set('')
-               # else:
-                res = add_user(data)
-                if res:
-                      tkinter.messagebox.showinfo("Register", "Registration successful.")
+              res = add_user(data)
+              if res:
+                  tkinter.messagebox.showinfo("Register", "Registration successful.")
     
         def registering():
             regwin = new_window(self)
             regwin.iconbitmap(r'snicon.ico')
             regwin.title('Register for ScanNET')
             regwin.geometry('600x400')
-            newuser = tk.StringVar()
-            newpass = tk.StringVar()
+            #newfname = tk.StringVar()
+            #newlname = tk.StringVar()
+            #newuser = tk.StringVar()
+            #newpass = tk.StringVar()
             tk.Label(regwin, text = 'Please enter your information.', font=LARGE_FONT).pack()
             tk.Label(regwin, text='').pack()
+            tk.Label(regwin, text="First Name").pack()
+            fnameentry = tk.Entry(regwin, textvariable= self.fname)
+            fnameentry.pack()
+            tk.Label(regwin, text="Last Name").pack()
+            lnameentry = tk.Entry(regwin, textvariable= self.lname)
+            lnameentry.pack()
             tk.Label(regwin, text="Username").pack()
             userentry = tk.Entry(regwin, textvariable= self.username)
             userentry.pack()
             tk.Label(regwin, text="Password").pack()
             passentry = tk.Entry(regwin, show='*',textvariable= self.password)
             passentry.pack()
-            tk.Label(regwin, text="").pack()
+            tk.Label(regwin, text="Use 8 or more characters with a mix of letters, numbers & symbols").pack()
+            tk.Label(regwin, text='').pack()
             tk.Button(regwin, text="Register", width=10, height=1, command=lambda: registeruser(self)).pack()
 
         def resetting():
@@ -109,7 +124,9 @@ class Loginpage(tk.Frame):
         tk.Frame.__init__(self,parent)
         tk.Frame.configure(self, bg='darkseagreen3')
         
-        #=====username and password 
+        #===== first name, last name, username, and password 
+        self.fname = tk.StringVar()
+        self.lname = tk.StringVar()
         self.username = tk.StringVar()
         self.password = tk.StringVar()
 
@@ -124,6 +141,7 @@ class Loginpage(tk.Frame):
         loginframe2.grid(row=2, column=0)
 
         #=====Label and Entry
+        
         userlabel = tk.Label(loginframe1, text='Username', font=(20), bg='darkseagreen3')
         userlabel.grid(row=0, column=0)
         usertext = tk.Entry(loginframe1, font=(20), textvariable = self.username)
