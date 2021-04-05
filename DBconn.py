@@ -1,5 +1,6 @@
 import mysql.connector
 
+
 #need to install mysql connector with pip install mysql-connector-python
 # need to download xampp software for mysql database
 #start apache server and mysql database
@@ -17,22 +18,27 @@ cursor = con.cursor()
 #function to access the database
 
 def user_login(tup):
-    try:
-        cursor.execute("SELECT * FROM `customer` WHERE `username` =%s AND `password`=%s", tup)
-        return (cursor.fetchone())
-    except:
-        return False
+        try:
+            cursor.execute("SELECT * FROM `customer` WHERE `username` =%s AND `password`=%s", tup)
+            cursor.fetchall()
+            return True
+        except:
+            return False
+
+
+   
 
 def add_user(tup):
    
-    cursor.execute("INSERT INTO `customer`(`username`,`password`) VALUES ( %s, %s)",tup)
+    cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, MD5(%s))",tup)
     con.commit()
     return True
 
-#def check_user(tup):
-  # if cursor.execute("SELECT * FROM `customer` WHERE EXISTS `username`=%s AND `password`=%s",tup):
 
-       #return True
+
+
+    
+       
 
 
 
