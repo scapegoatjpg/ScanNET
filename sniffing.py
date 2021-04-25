@@ -1,13 +1,9 @@
-import dpkt, pcap       #pip install dpkt and pip intall pypcap (just use the requirements.txt)
-import datetime
-import time
+import dpkt, pcap, datetime, time, socket, nmap, who_is_on_my_wifi
 from threading import Timer
-import socket
-import nmap
-import who_is_on_my_wifi
 from who_is_on_my_wifi import who
 from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
+from dns import reversename, resolver
 
 class Packet():
     def __init__(self):
@@ -60,6 +56,7 @@ class PktCount():
 recentdevs = []
 ips = []
 alldevs = []
+track = []
 WHO = who()
 for i in range(0, len(WHO)):
     alldevs.append(WHO[i][1])
@@ -157,6 +154,13 @@ def print_packets(pcap):
             pkt_list.append(pkt)
             continue
 
+        #print hostname (DNS for now)
+        addr = pkt.src
+        domain_address = reversename.from_address(addr)
+        try:
+            pkt.hostname = str(resolver.resolve(domain_address, "PTR")[0])
+        except resolver.NXDOMAIN:
+            pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
         #prints protocols
         pkt.ipv = eth.data.__class__.__name__
         try:
