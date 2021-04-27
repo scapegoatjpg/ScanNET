@@ -22,6 +22,7 @@ class Packet():
         self.prtcl = ''
         self.length = 0
         self.info = ''
+        self.color = ''
 class Devs():
     def __init__(self):
         self.hostname = ''
@@ -56,7 +57,12 @@ class PktCount():
 recentdevs = []
 ips = []
 alldevs = []
-track = []
+track = {}
+actualcolors = {
+    'red' : 'brown2',
+    'blue' : 'royalblue2',
+    'yellow' : 'light goldenrod'
+}
 WHO = who()
 for i in range(0, len(WHO)):
     alldevs.append(WHO[i][1])
@@ -153,22 +159,41 @@ def print_packets(pcap):
             pkt.prtcl = 'ARP'
             pkt_list.append(pkt)
             continue
+        
+        if any(pkt.src in sublist for sublist in track):
+            pkt.color = actualcolors[track[pkt.src]]
+        else:
+            pkt.color = 'darkseagreen3'
 
-        #print hostname (DNS for now)
-        addr = pkt.src
-        domain_address = reversename.from_address(addr)
-        try:
-            pkt.hostname = str(resolver.resolve(domain_address, "PTR")[0])
-        except resolver.NXDOMAIN:
-            pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
         #prints protocols
         pkt.ipv = eth.data.__class__.__name__
         try:
             pkt.prtcl = eth.data.get_proto(eth.data.p).__name__
         except AttributeError:
             pass
-
+        #print hostname (DNS for now)
+        try:
+            pkt.hostname = str(resolver.resolve(reversename.from_address(pkt.src), 'PTR')[0])
+        except resolver.NXDOMAIN:
+            try:
+                pkt.hostname = str(socket.gethostbyaddr(pkt.src)[0])
+            #pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
+            except:
+                pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
+        
         pkt_list.append(pkt)
+'''
+        domain_address = reversename.from_address(pkt.src)
+        if pkt.ipv == 'IP6':
+            try:
+                pkt.hostname = str(socket.gethostbyaddr(pkt.src))
+        elif pkt.ipv == 'IP':
+            try:
+                pkt.hostname = str(resolver.resolve(domain_address, 'PTR')[0])
+            except resolver.NXDOMAIN:
+                pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])'''
+
+
 
 def write_packets(writer):
     pc = pcap.pcap()
