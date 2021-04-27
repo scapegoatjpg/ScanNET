@@ -2,10 +2,10 @@ import tkinter as tk
 import tkinter.messagebox
 from tkinter import ttk
 import sniffing
-from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs, pktcounting
+from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs, pktcounting, track, socket
 import threading
 import DBconn
-from DBconn import *
+from DBconn import * 
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -16,7 +16,7 @@ from matplotlib import style
 style.use('ggplot')
 
 #testing out figure sizes
-fig1 = Figure(figsize=(3,3), dpi=100)
+fig1 = Figure(figsize=(5,5), dpi=100)
 a1 = fig1.add_subplot(111)
 #fig2 = Figure(figsize=(5,5), dpi=100)
 #a2 = fig2.add_subplot(111)
@@ -39,6 +39,12 @@ yWHO = []
 yRSYNC = []
 yICMP = []
 yIPV6 = []
+
+colors = [
+    'red',
+    'blue',
+    'yellow'
+]
 
 def pktanimate(i):
     xPkts.append(pktcounting.counter)
@@ -63,44 +69,44 @@ def pktanimate(i):
     a1.clear()
         
     if pktcounting.ipcounter > 0:
-        a1.plot(xPkts, yIP, label="IP")
+        a1.plot(xPkts, yIP, label='IP')
     if pktcounting.nonipcounter > 0:
-        a1.plot(xPkts, yNONIP, label="Non-IP")
+        a1.plot(xPkts, yNONIP, label='Non-IP')
     if pktcounting.tcpcounter > 0:
-        a1.plot(xPkts, yTCP, label="TCP")
+        a1.plot(xPkts, yTCP, label='TCP')
     if pktcounting.udpcounter > 0:
-        a1.plot(xPkts, yUDP, label="UDP")
+        a1.plot(xPkts, yUDP, label='UDP')
     if pktcounting.arpcounter > 0:
-        a1.plot(xPkts, yARP, label="ARP")
+        a1.plot(xPkts, yARP, label='ARP')
     if pktcounting.httpcounter > 0:
-        a1.plot(xPkts, yHTTP, label="HTTP")
+        a1.plot(xPkts, yHTTP, label='HTTP')
     if pktcounting.httpscounter > 0:
-        a1.plot(xPkts, yHTTPS, label="HTTPS")
+        a1.plot(xPkts, yHTTPS, label='HTTPS')
     if pktcounting.smtpcounter > 0:
-        a1.plot(xPkts, ySMTP, label="SMTP")
+        a1.plot(xPkts, ySMTP, label='SMTP')
     if pktcounting.dhcpcounter > 0:
-        a1.plot(xPkts, yDHCP, label="DHCP")
+        a1.plot(xPkts, yDHCP, label='DHCP')
     if pktcounting.ftpcounter > 0:
-        a1.plot(xPkts, yFTP, label="FTP")
+        a1.plot(xPkts, yFTP, label='FTP')
     if pktcounting.sshcounter > 0:
-        a1.plot(xPkts, ySSH, label="SSH")
+        a1.plot(xPkts, ySSH, label='SSH')
     if pktcounting.ntpcounter > 0:
-        a1.plot(xPkts, yNTP, label="NTP")
+        a1.plot(xPkts, yNTP, label='NTP')
     if pktcounting.telnetcounter > 0:
-        a1.plot(xPkts, yTN, label="TelNet")
+        a1.plot(xPkts, yTN, label='TelNet')
     if pktcounting.whoiscounter > 0:
-        a1.plot(xPkts, yWHO, label="whois")
+        a1.plot(xPkts, yWHO, label='whois')
     if pktcounting.rsynccounter > 0:
-        a1.plot(xPkts, yRSYNC, label="RSYNC")
+        a1.plot(xPkts, yRSYNC, label='RSYNC')
     if pktcounting.icmpcounter > 0:
-        a1.plot(xPkts, yICMP, label="ICMP")
+        a1.plot(xPkts, yICMP, label='ICMP')
     if pktcounting.ipv6counter > 0:
-        a1.plot(xPkts, yIPV6, label="IPv6")
+        a1.plot(xPkts, yIPV6, label='IPv6')
 
     #a1.title('Packet Types')
     a1.legend()
 
-LARGE_FONT = ("Verdana", 22)
+LARGE_FONT = ('Verdana', 22)
 class Pages(tk.Tk):
     #starts us off in the login page
     def __init__(self):
@@ -138,19 +144,19 @@ class Loginpage(tk.Frame):
 
             #validations
             if self.username.get() == '' and self.password.get() == '':
-                tkinter.messagebox.showerror("Error", "Please enter your credentials.")
-            else:   #try except so that we don't deal with KeyError
+                tkinter.messagebox.showerror('Error', 'Please enter your credentials.')
+            else:
                res = user_login(data)
                if res:
-                   tkinter.messagebox.showinfo("Message", "Login Successfully")
+                   tkinter.messagebox.showinfo('Message', 'Login Successfully')
                    controller.show_frame(GUI)
                    sniffthread.start()
                else:
-                    tkinter.messagebox.showerror("Error", "Wrong credentials, please try again.")
+                    tkinter.messagebox.showerror('Error', 'Wrong credentials, please try again.')
                     resetting()
         
         def registeruser(self):
-            print("registering this new user...")
+            print('registering this new user...')
             data2 = self.password.get()
             data = (
                 self.fname.get(),
@@ -160,12 +166,12 @@ class Loginpage(tk.Frame):
                 )
 
             if self.fname.get() == '' or self.lname.get() == '' or self.username.get() == '' or self.password.get() == '':
-                tkinter.messagebox.showerror("Error", "Please enter your credentials.")    
+                tkinter.messagebox.showerror('Error', 'Please enter your credentials.')    
          
             else:
               res = add_user(data)
               if res:
-                  tkinter.messagebox.showinfo("Register", "Registration successful.")
+                  tkinter.messagebox.showinfo('Register', 'Registration successful.')
     
         def registering():
             regwin = new_window(self)
@@ -178,21 +184,21 @@ class Loginpage(tk.Frame):
             #newpass = tk.StringVar()
             tk.Label(regwin, text = 'Please enter your information.', font=LARGE_FONT).pack()
             tk.Label(regwin, text='').pack()
-            tk.Label(regwin, text="First Name").pack()
+            tk.Label(regwin, text='First Name').pack()
             fnameentry = tk.Entry(regwin, textvariable= self.fname)
             fnameentry.pack()
-            tk.Label(regwin, text="Last Name").pack()
+            tk.Label(regwin, text='Last Name').pack()
             lnameentry = tk.Entry(regwin, textvariable= self.lname)
             lnameentry.pack()
-            tk.Label(regwin, text="Username").pack()
+            tk.Label(regwin, text='Username').pack()
             userentry = tk.Entry(regwin, textvariable= self.username)
             userentry.pack()
-            tk.Label(regwin, text="Password").pack()
+            tk.Label(regwin, text='Password').pack()
             passentry = tk.Entry(regwin, show='*',textvariable= self.password)
             passentry.pack()
-            tk.Label(regwin, text="Use 8 or more characters with a mix of letters, numbers & symbols").pack()
+            tk.Label(regwin, text='Use 8 or more characters with a mix of letters, numbers & symbols').pack()
             tk.Label(regwin, text='').pack()
-            tk.Button(regwin, text="Register", width=10, height=1, command=lambda: registeruser(self)).pack()
+            tk.Button(regwin, text='Register', width=10, height=1, command=lambda: registeruser(self)).pack()
 
         def resetting():
             self.username.set('')
@@ -254,30 +260,30 @@ class ScrollFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent) # create a frame (self)
 
-        self.canvas = tk.Canvas(self, borderwidth=0, background="#ffffff")          #place canvas on self
-        self.viewPort = tk.Frame(self.canvas, background="#ffffff")                    #place a frame on the canvas, this frame will hold the child widgets 
-        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview) #place a scrollbar on self 
+        self.canvas = tk.Canvas(self, borderwidth=0, background='#ffffff')          #place canvas on self
+        self.viewPort = tk.Frame(self.canvas, background='#ffffff')                    #place a frame on the canvas, this frame will hold the child widgets 
+        self.vsb = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview) #place a scrollbar on self 
         self.canvas.configure(yscrollcommand=self.vsb.set)   
         self.canvas.yview_moveto('1.0')                       #attach scrollbar action to scroll of canvas
 
-        self.vsb.pack(side="right", fill="y")                                       #pack scrollbar to right of self
-        self.canvas.pack(side="left", fill="both", expand=True)                     #pack canvas to left of self and expand to fil
-        self.canvas_window = self.canvas.create_window((4,4), window=self.viewPort, anchor="nw", tags="self.viewPort")           #add view port frame to canvas      
+        self.vsb.pack(side='right', fill='y')                                       #pack scrollbar to right of self
+        self.canvas.pack(side='left', fill='both', expand=True)                     #pack canvas to left of self and expand to fil
+        self.canvas_window = self.canvas.create_window((4,4), window=self.viewPort, anchor='nw', tags='self.viewPort')           #add view port frame to canvas      
 
-        self.viewPort.bind("<Configure>", self.onFrameConfigure)                       #bind an event whenever the size of the viewPort frame changes.
-        self.canvas.bind("<Configure>", self.onCanvasConfigure)                       #bind an event whenever the size of the viewPort frame changes.
+        self.viewPort.bind('<Configure>', self.onFrameConfigure)                       #bind an event whenever the size of the viewPort frame changes.
+        self.canvas.bind('<Configure>', self.onCanvasConfigure)                       #bind an event whenever the size of the viewPort frame changes.
 
         self.onFrameConfigure(None)                                                 #perform an initial stretch on render, otherwise the scroll region has a tiny border until the first resize
 
     def onFrameConfigure(self, event):                                              
         '''Reset the scroll region to encompass the inner frame'''
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))                 #whenever the size of the frame changes, alter the scroll region respectively.
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))                 #whenever the size of the frame changes, alter the scroll region respectively.
 
     def onCanvasConfigure(self, event):
         '''Reset the canvas window to encompass inner frame when required'''
         canvas_width = event.width
         self.canvas.itemconfig(self.canvas_window, width = canvas_width)            #whenever the size of the canvas changes alter the window region respectively.
-testin = 0
+
 class GUI(tk.Frame):
     def __init__(self, parent, controller):
         #all widths and heights aren't official, most likely change                
@@ -310,7 +316,8 @@ class GUI(tk.Frame):
                 #continously checks if anything is added into the pkt_list queue. Packets are added from sniffing thread 
                 if len(pkt_list) != 0:
                     pktmp = pkt_list.pop(0)
-                    pktstr = 'No.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + pktmp.ts + '\nEthernetFrame:\nMAC source: ' + pktmp.macsrc + '\nMAC dest: ' + pktmp.macdst + '\n' + pktmp.ipv + ':\nIP source: ' + pktmp.src + '\nIP dest: ' + pktmp.dst
+                    pktstr = 'Hostname: ' + str(pktmp.hostname)
+                    pktstr = pktstr + '\nNo.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + str(pktmp.ts) + '\nEthernetFrame:\nMAC source: ' + str(pktmp.macsrc) + '\nMAC dest: ' + str(pktmp.macdst) + '\n' + str(pktmp.ipv) + ':\nIP source: ' + str(pktmp.src) + '\nIP dest: ' + str(pktmp.dst)
 
                     if (pktmp.sport != 0) or (pktmp.dport != 0):
                         try:
@@ -319,11 +326,11 @@ class GUI(tk.Frame):
                             pass
                     if (pktmp.prtcl == 'ICMP6') or (pktmp.prtcl == 'ICMP'):
                         try:
-                            pktstr = pktstr + pktmp.prtcl + ': type:' + str(pktmp.pack.type) + ' code:' + str(pktmp.pack.code) + ' checksum:' + str(pktmp.pack.sum) + ' data: ' + repr(pktmp.pack.data)  
+                            pktstr = str(pktstr) + str(pktmp.prtcl) + ': type:' + str(pktmp.pack.type) + ' code:' + str(pktmp.pack.code) + ' checksum:' + str(pktmp.pack.sum) + ' data: ' + repr(pktmp.pack.data)  
                         except AttributeError:
                             pass
                     a = pktstr
-                    tk.Button(pktframe.viewPort, width=100, anchor='w', text=pktstr, command=lambda x=a: pktwin(x)).grid(row=pktmp.num, column=0)
+                    tk.Button(pktframe.viewPort, width=100, anchor='w', text=pktstr, bg=pktmp.color, command=lambda x=a: pktwin(x)).grid(row=pktmp.num, column=0)
 
                     dev = Devs
                     if any(i.ipaddr == pktmp.src for i in recentdevs) or any(i.ipaddr == pktmp.dst for i in recentdevs):
@@ -331,16 +338,16 @@ class GUI(tk.Frame):
                     else:
                         dev.timing = pktmp.timing
                         if pktmp.src in alldevs:
+                            dev.hostname = pktmp.hostname
                             dev.ipaddr = pktmp.src
+                            dev.mac = pktmp.macsrc
+                            
                             recentdevs.append(dev)
-                        elif pktmp.dst in alldevs:
-                            dev.ipaddr = pktmp.dst
-                            recentdevs.append(dev)
-
+                            
                     if len(devframe.viewPort.winfo_children()) < len(recentdevs):
                         for i in range(len(devframe.viewPort.winfo_children()), len(recentdevs)):
-                            a = recentdevs[i].ipaddr
-                            tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[i].ipaddr, command=lambda x=a: devwin(x)).grid(row=i, column=0)
+                            a = recentdevs[i].hostname
+                            tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[i].hostname, command=lambda x=a: devwin(x)).grid(row=i, column=0)
 
                     if len(recentdevs) != 0:
                         for i in range(len(recentdevs)):
@@ -352,8 +359,22 @@ class GUI(tk.Frame):
                                 for child in devframe.viewPort.winfo_children():
                                     child.destroy()
                                 for j in range(len(recentdevs)):
-                                    a = recentdevs[j].ipaddr
-                                    tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[j].ipaddr, command=lambda x=a: devwin(x)).grid(row=j, column=0)
+                                    a = recentdevs[j].hostname
+                                    tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[j].hostname, command=lambda x=a: devwin(x)).grid(row=j, column=0)
+
+        def trackdef(name, color):
+            if name == '' or name == ' ':
+                pass
+            else:
+                try:
+                    track[name] = color
+                    trackvar.set('')
+                    colorbtn.set(colors[0])
+                    tracktext.focus()
+                except socket.gaierror:
+                    pass
+            print(track)
+
 
         tk.Frame.__init__(self, parent)
 
@@ -370,12 +391,26 @@ class GUI(tk.Frame):
         #contents for devices tab
         devicesleft = tk.LabelFrame(devicestab, text='Devices found: ', padx=5, pady=5, width=2, height=1, bg='darkseagreen3')
         devicesleft.grid(row=0, column=0)
+
         devicesright = tk.LabelFrame(devicestab, text='Activity Feed: ', padx=5, pady=5, width=1 , height=1, bg='darkseagreen3')
         devicesright.grid(row=0, column=1)
+
+        acttracking = tk.LabelFrame(devicestab, width=2 , height=1, bg='darkseagreen')
+        acttracking.grid(row=1, column=1)
 
         devframe = ScrollFrame(devicesleft)
         devframe.pack(side='top', fill='both', expand=True)
 
+        trackvar = tk.StringVar()
+        colorbtn = tk.StringVar(acttracking)
+        colorbtn.set(colors[0])
+        tracktext = tk.Entry(acttracking, font=(16), textvariable=trackvar, width=25)
+        trackbtn = tk.Button(acttracking, text='Track', width=10, height=1, command= lambda: trackdef(trackvar.get(), colorbtn.get()))
+        col = tk.OptionMenu(acttracking, colorbtn, *colors)
+        tracktext.grid(row=0, column=0)
+        col.grid(row=0, column=1)
+        trackbtn.grid(row=0, column=2)
+        
         pktframe = ScrollFrame(devicesright)
         pktframe.pack(side='top', fill='both', expand=True)
 
@@ -387,22 +422,11 @@ class GUI(tk.Frame):
         
         reporting = tk.Text(reportsleft, width=40)
         reporting.pack()
-        reporting.insert('end', 'What are we to ever do, my mind is lead and your a wall.')
+        reporting.insert('end', ' ')
 
         cnvs1 = FigureCanvasTkAgg(fig1, reportsright)
         cnvs1.draw()
         cnvs1.get_tk_widget().pack(side='top')
-
-        da = [300, 500, 700]
-        my_labels = 'Tasks Pending', 'Tasks Ongoing', 'Task Completed'
-
-        fig2 = Figure(figsize=(3,3), dpi=100)
-        a2 = fig2.add_subplot(111)
-        a2.pie(da, labels=my_labels)
-        a2.axis('equal')
-
-        pie2 = FigureCanvasTkAgg(fig2, reportsright)
-        pie2.get_tk_widget().pack(side='bottom')
 
         #thread for updating packet info starts when scannetgui.py is executued, but won't print any packets since sniffing thread begins once successfully logged in
         updatethread = threading.Thread(target=updatepkts)
@@ -414,7 +438,6 @@ def backthread():
 def forethread():
     app = Pages()
     ani1 = animation.FuncAnimation(fig1, pktanimate, interval=1550)
-    #ani2 = animation.FuncAnimation(fig2,)
     app.mainloop()
 
 sniffthread = threading.Thread(target=backthread)
