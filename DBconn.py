@@ -27,7 +27,7 @@ def user_login(tup):
 
 
    
-
+#save data into customer table
 def add_user(tup):
    
     cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, MD5(%s))",tup)
@@ -36,6 +36,22 @@ def add_user(tup):
 
 
 
+#save data into networkactivity table
+def network_activity(tup):
+   cursor.execute("INSERT INTO `networkactivity`(`IPAddress`,`networkNameSSID`,`packetNum`,`timeStamp`,`source`,`destination`) VALUES( %s, %s, %s, %s, %s, %s)", tup)
+   con.commit()
+   return True
+
+#save data into networkinfo table
+def network_info(tup):
+    cursor.execute("INSERT INTO `networkinfo`(`networkNameSSID`,`IPAddress`) VALUES(%s, %s)", tup)
+    con.commit()
+    return True
+
+def device(tup):
+    cursor.execute("INSERT INTO `device`(`IPAddress`, `MACAddress`,`customerName`) VALUES(%s, %s, %s)", tup)
+    con.commit()
+    return True
 
     
        
