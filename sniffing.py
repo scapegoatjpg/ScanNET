@@ -4,7 +4,8 @@ from who_is_on_my_wifi import who
 from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
 from dns import reversename, resolver
-
+import DBconn
+from DBconn import * 
 class Packet():
     def __init__(self):
         self.pack = ''
@@ -73,12 +74,23 @@ pktnum = 0
 
 pktcounting = PktCount()
 
+def network_DB(p,q):
+    
+        #Save packet information in database
+    network = network_info(p)
+    result = network_activity(q)
+    if result:
+       print("Packet Information is Saved")
+    if network:
+        print("Network Information is Saved")
+
 def print_packets(pcap):
     for timestamp, buf in pcap:
         global pktcounting
         pktcounting.counter += 1
         
         eth = dpkt.ethernet.Ethernet(buf)
+       
         #assigned anything applicable right away
         pkt = Packet
         pkt.pack = eth.data
@@ -180,8 +192,21 @@ def print_packets(pcap):
             #pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
             except:
                 pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
-        
+        packet_info = (
+            pkt.src, #IP Address
+            pkt.hostname, #NetworkNameSSID
+            pkt.num, # PacketNum
+            pkt.ts, #timeStamp
+            pkt.macsrc, #source
+            pkt.macdst, #destination 
+        )
+        network_inf = (
+            pkt.hostname, #NetworkNameSSID
+            pkt.src #IP Address
+            )
         pkt_list.append(pkt)
+        network_DB(network_inf,packet_info)
+        
 '''
         domain_address = reversename.from_address(pkt.src)
         if pkt.ipv == 'IP6':
@@ -219,5 +244,6 @@ def net():
             with open('test.pcap', 'rb') as f:
                 pcap = dpkt.pcap.Reader(f)
                 print_packets(pcap)
+              
         except KeyboardInterrupt:
             break
