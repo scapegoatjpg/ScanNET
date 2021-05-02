@@ -309,14 +309,19 @@ class GUI(tk.Frame):
 
         def new_window(self):
             return tk.Toplevel(self.master)
-            
+        
+        def device_info(p):
+            deviceinf = device(p)
+            if deviceinf:
+                print("Device Information is Saved")
+
         def updatepkts():
             #updates the packet feed in the gui
             while True:
                 #continously checks if anything is added into the pkt_list queue. Packets are added from sniffing thread 
                 if len(pkt_list) != 0:
                     pktmp = pkt_list.pop(0)
-                    pktstr = 'Hostname: ' + str(pktmp.hostname)
+                    pktstr = 'Hostname: ' + pktmp.hostname()
                     pktstr = pktstr + '\nNo.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + str(pktmp.ts) + '\nEthernetFrame:\nMAC source: ' + str(pktmp.macsrc) + '\nMAC dest: ' + str(pktmp.macdst) + '\n' + str(pktmp.ipv) + ':\nIP source: ' + str(pktmp.src) + '\nIP dest: ' + str(pktmp.dst)
 
                     if (pktmp.sport != 0) or (pktmp.dport != 0):
@@ -333,6 +338,7 @@ class GUI(tk.Frame):
                     tk.Button(pktframe.viewPort, width=100, anchor='w', text=pktstr, bg=pktmp.color, command=lambda x=a: pktwin(x)).grid(row=pktmp.num, column=0)
 
                     dev = Devs
+                    
                     if any(i.ipaddr == pktmp.src for i in recentdevs) or any(i.ipaddr == pktmp.dst for i in recentdevs):
                         pass
                     else:
@@ -341,8 +347,16 @@ class GUI(tk.Frame):
                             dev.hostname = pktmp.hostname
                             dev.ipaddr = pktmp.src
                             dev.mac = pktmp.macsrc
+                       
+                        devices = (
                             
-                            recentdevs.append(dev)
+                            dev.ipaddr,
+                            dev.mac,
+                            self.username.get()
+                          )    
+                       
+                        device_info(devices)
+                        recentdevs.append(dev)
                             
                     if len(devframe.viewPort.winfo_children()) < len(recentdevs):
                         for i in range(len(devframe.viewPort.winfo_children()), len(recentdevs)):
