@@ -26,6 +26,8 @@ SET time_zone = "+00:00";
 --
 -- Table structure for table `customer`
 --
+CREATE DATABASE IF NOT EXISTS `scannet`;
+USE `scannet`;
 
 CREATE TABLE `customer` (
   `userID` int(12) NOT NULL,
