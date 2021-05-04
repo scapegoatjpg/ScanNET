@@ -37,4 +37,7 @@ def checkSite(site):
     X_predict.append(site)
     X_predict = vectorizer.transform(X_predict)
     New_predict = logit.predict(X_predict)
-    print('URL: ', site, '\n    Prediction:', New_predict[0])
+    if New_predict[0] == 'bad':
+        return True
+    else:
+        return False
