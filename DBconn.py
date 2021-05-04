@@ -18,21 +18,25 @@ cursor = con.cursor()
 #function to access the database
 
 def user_login(tup):
-        try:
-            cursor.execute("SELECT * FROM `customer` WHERE `username` =%s AND `password`=%s", tup)
-            cursor.fetchall()
-            return True
-        except:
-            return False
+           cursor.execute("SELECT username, password FROM `customer` WHERE `username` = %s AND `password`= %s", tup)
+           results = cursor.fetchall()
+           for row in results:
+               if row == '':
+                   return False
+               else:
+                return True
+
+         
+
+            
+           
 
 
-   
-#save data into customer table
+
 def add_user(tup):
-   
-    cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, MD5(%s))",tup)
-    con.commit()
-    return True
+        cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, %s)",tup)
+        con.commit()
+        return True
 
 
 
