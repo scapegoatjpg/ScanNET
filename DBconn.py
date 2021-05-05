@@ -1,6 +1,5 @@
 import mysql.connector
 
-
 #need to install mysql connector with pip install mysql-connector-python
 # need to download xampp software for mysql database
 #start apache server and mysql database
@@ -18,44 +17,34 @@ cursor = con.cursor()
 #function to access the database
 
 def user_login(tup):
-           cursor.execute("SELECT username, password FROM `customer` WHERE `username` = %s AND `password`= %s", tup)
-           results = cursor.fetchall()
-           for row in results:
-               if row == '':
-                   return False
-               else:
-                return True
+    cursor.execute("SELECT username, password FROM `customer` WHERE `username` = %s AND `password`= %s", tup)
+    results = cursor.fetchall()
+    for row in results:
+        if row == '':
+            return False
+        else:
+            return True
 
-         
-
-            
-           
-
-
-
+#save data into customer table
 def add_user(tup):
-        cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, %s)",tup)
-        con.commit()
-        return True
 
-
+    cursor.execute("INSERT INTO `customer`(`firstName`,`lastName`,`username`,`password`) VALUES ( %s, %s, %s, MD5(%s))",tup)
+    con.commit()
+    return True
 
 #save data into networkactivity table
 def network_activity(tup):
-   cursor.execute("INSERT INTO `networkactivity`(`IPAddress`,`networkNameSSID`,`packetNum`,`timeStamp`,`source`,`destination`) VALUES( %s, %s, %s, %s, %s, %s)", tup)
-   con.commit()
-   return True
+    cursor.execute("INSERT INTO `networkactivity`(`IPAddress`,`networkNameSSID`,`packetNum`,`timeStamp`,`source`,`destination`) VALUES( %s, %s, %s, %s, %s, %s)", tup)
+    con.commit()
 
 #save data into networkinfo table
 def network_info(tup):
     cursor.execute("INSERT INTO `networkinfo`(`networkNameSSID`,`IPAddress`) VALUES(%s, %s)", tup)
     con.commit()
-    return True
 
 def device(tup):
     cursor.execute("INSERT INTO `device`(`IPAddress`, `MACAddress`,`customerName`) VALUES(%s, %s, %s)", tup)
     con.commit()
-    return True
 
     
        
