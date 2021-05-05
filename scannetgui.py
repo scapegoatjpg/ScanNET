@@ -1,12 +1,9 @@
 import tkinter as tk
 import tkinter.messagebox
 from tkinter import ttk
-import sniffing
-from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs, pktcounting, track, socket
-import threading
-import DBconn
-from DBconn import * 
-import matplotlib
+import sniffing, threading, DBconn, matplotlib, isMalSite
+from sniffing import pkt_list, recentdevs, alldevs, time, datetime, Devs, pktcounting, track, socket, visited
+from DBconn import user_login, add_user, device
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
@@ -14,12 +11,10 @@ import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
 from matplotlib import style
 style.use('ggplot')
+from selenium import webdriver
 
-#testing out figure sizes
 fig1 = Figure(figsize=(5,5), dpi=100)
 a1 = fig1.add_subplot(111)
-#fig2 = Figure(figsize=(5,5), dpi=100)
-#a2 = fig2.add_subplot(111)
 
 xPkts = []
 yIP = []
@@ -136,14 +131,10 @@ class Loginpage(tk.Frame):
     def __init__(self, parent, controller):
         #=====button functions
         def validation(self, controller):
-            data = (
-               
-                self.username.get(),
-                self.password.get()
-                )
+            data = (self.username.get(), self.password.get())
 
             #validations
-            if self.username.get() == '' and self.password.get() == '':
+            if self.username.get() == '' or self.password.get() == '':
                 tkinter.messagebox.showerror('Error', 'Please enter your credentials.')
             else:
                res = user_login(data)
@@ -157,13 +148,12 @@ class Loginpage(tk.Frame):
         
         def registeruser(self):
             print('registering this new user...')
-            data2 = self.password.get()
             data = (
                 self.fname.get(),
                 self.lname.get(),
                 self.username.get(),
-                data2
-                )
+                self.password.get()
+            )
 
             if self.fname.get() == '' or self.lname.get() == '' or self.username.get() == '' or self.password.get() == '':
                 tkinter.messagebox.showerror('Error', 'Please enter your credentials.')    
@@ -178,10 +168,6 @@ class Loginpage(tk.Frame):
             regwin.iconbitmap(r'snicon.ico')
             regwin.title('Register for ScanNET')
             regwin.geometry('600x400')
-            #newfname = tk.StringVar()
-            #newlname = tk.StringVar()
-            #newuser = tk.StringVar()
-            #newpass = tk.StringVar()
             tk.Label(regwin, text = 'Please enter your information.', font=LARGE_FONT).pack()
             tk.Label(regwin, text='').pack()
             tk.Label(regwin, text='First Name').pack()
@@ -309,20 +295,15 @@ class GUI(tk.Frame):
 
         def new_window(self):
             return tk.Toplevel(self.master)
-        
-        def device_info(p):
-            deviceinf = device(p)
-            if deviceinf:
-                print("Device Information is Saved")
 
         def updatepkts():
+            devcount = 0
             #updates the packet feed in the gui
             while True:
                 #continously checks if anything is added into the pkt_list queue. Packets are added from sniffing thread 
                 if len(pkt_list) != 0:
                     pktmp = pkt_list.pop(0)
-                    pktstr = 'Hostname: ' + pktmp.hostname()
-                    pktstr = pktstr + '\nNo.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + str(pktmp.ts) + '\nEthernetFrame:\nMAC source: ' + str(pktmp.macsrc) + '\nMAC dest: ' + str(pktmp.macdst) + '\n' + str(pktmp.ipv) + ':\nIP source: ' + str(pktmp.src) + '\nIP dest: ' + str(pktmp.dst)
+                    pktstr = 'Hostname: ' + str(pktmp.hostname) + '\nNo.: ' + str(pktmp.num) + '\nLength: ' + str(pktmp.length) + '\nTimestamp: ' + str(pktmp.ts) + '\nEthernetFrame:\nMAC source: ' + str(pktmp.macsrc) + '\nMAC dest: ' + str(pktmp.macdst) + '\n' + str(pktmp.ipv) + ':\nIP source: ' + str(pktmp.src) + '\nIP dest: ' + str(pktmp.dst)
 
                     if (pktmp.sport != 0) or (pktmp.dport != 0):
                         try:
@@ -347,36 +328,41 @@ class GUI(tk.Frame):
                             dev.hostname = pktmp.hostname
                             dev.ipaddr = pktmp.src
                             dev.mac = pktmp.macsrc
-                       
-                        devices = (
-                            
-                            dev.ipaddr,
-                            dev.mac,
-                            self.username.get()
-                          )    
-                       
-                        device_info(devices)
-                        recentdevs.append(dev)
-                            
-                    if len(devframe.viewPort.winfo_children()) < len(recentdevs):
-                        for i in range(len(devframe.viewPort.winfo_children()), len(recentdevs)):
-                            a = recentdevs[i].hostname
-                            tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[i].hostname, command=lambda x=a: devwin(x)).grid(row=i, column=0)
+                            devcount += 1
 
-                    if len(recentdevs) != 0:
-                        for i in range(len(recentdevs)):
-                            timenow = (str(datetime.datetime.now().hour)+':'+str(datetime.datetime.now().minute)+':'+str(datetime.datetime.now().second))
-                            tdelta = datetime.datetime.strptime(timenow, '%H:%M:%S') - datetime.datetime.strptime(recentdevs[i].timing, '%H:%M:%S')
-                            if tdelta > datetime.timedelta(seconds=30):
-                                recentdevs.remove(recentdevs[i])
-                                i = 0
-                                for child in devframe.viewPort.winfo_children():
-                                    child.destroy()
-                                for j in range(len(recentdevs)):
-                                    a = recentdevs[j].hostname
-                                    tk.Button(devframe.viewPort, width=100, anchor='w', text=recentdevs[j].hostname, command=lambda x=a: devwin(x)).grid(row=j, column=0)
+                            recentdevs.append(dev)
+                            devices = (dev.ipaddr, dev.mac, 'Customer')    
+                            device(devices)
+
+                    if len(devframe.viewPort.winfo_children()) < len(recentdevs):
+                        for i in recentdevs[len(devframe.viewPort.winfo_children()):]:
+                            a = str(i.hostname) + '\n' + str(i.ipaddr) + '\n' + str(i.mac)
+                            tk.Button(devframe.viewPort, width=100, anchor='w', text=i.hostname, bg='darkseagreen3',command=lambda x=a: devwin(x)).grid(row=devcount, column=0)
+
+                            
+
+        def isMal():
+            driver = webdriver.Chrome(r'G:\_downloads\chromedriver.exe') #put your chromedriver.exe directory here
+            #will constantly run to check if the current site is malicious
+            while True:
+                url = driver.current_url
+                if 'https://www.' in url:
+                    url = url.replace('https://www.', '')
+                elif 'http://www.' in url:
+                    url = url.replace('http://www.', '')
+                elif 'http://' in url:
+                    url = url.replace('http://', '')
+                elif 'https://' in url:
+                    url = url.replace('https://', '')
+                if url not in visited:
+                    if isMalSite.checkSite(url):
+                        maltext = 'The website ' + str(url) + ' has been detected to be malicious or suspicious. Proceed with caution!'
+                        tkinter.messagebox.showwarning('Warning', maltext)
+                        tk.Button(reporting.viewPort, width=100, anchor='w', text=str(url)).grid(row=len(visited), column=0)
+                    visited.append(url)
 
         def trackdef(name, color):
+            #used to track network activity of certain sites
             if name == '' or name == ' ':
                 pass
             else:
@@ -387,8 +373,6 @@ class GUI(tk.Frame):
                     tracktext.focus()
                 except socket.gaierror:
                     pass
-            print(track)
-
 
         tk.Frame.__init__(self, parent)
 
@@ -429,22 +413,23 @@ class GUI(tk.Frame):
         pktframe.pack(side='top', fill='both', expand=True)
 
         #contents for reports tab
-        reportsleft = tk.LabelFrame(reportstab, text='Report Summaries: ', padx=5, pady=5, width=1 , height=1, bg='darkseagreen3')
+        reportsleft = tk.LabelFrame(reportstab, text='Alerts: ', padx=5, pady=5, width=1 , height=1, bg='darkseagreen3')
         reportsleft.grid(row=0, column=0)
         reportsright= tk.LabelFrame(reportstab, text='Charts and Diagrams: ', padx=5, pady=5, width=1 , height=1, bg='darkseagreen3')
         reportsright.grid(row=0, column=1)
         
-        reporting = tk.Text(reportsleft, width=40)
+        reporting = ScrollFrame(reportsleft)
         reporting.pack()
-        reporting.insert('end', ' ')
 
         cnvs1 = FigureCanvasTkAgg(fig1, reportsright)
         cnvs1.draw()
         cnvs1.get_tk_widget().pack(side='top')
 
         #thread for updating packet info starts when scannetgui.py is executued, but won't print any packets since sniffing thread begins once successfully logged in
+        checkSiteMal = threading.Thread(target=isMal)
         updatethread = threading.Thread(target=updatepkts)
         updatethread.start()
+        checkSiteMal.start()
     
 #threads so work different processes can go at the same time
 def backthread():
