@@ -5,7 +5,7 @@ from dpkt.compat import compat_ord
 from dpkt.utils import mac_to_str, inet_to_str
 from dns import reversename, resolver
 import DBconn
-from DBconn import * 
+from DBconn import network_info, network_activity
 class Packet():
     def __init__(self):
         self.pack = ''
@@ -58,6 +58,7 @@ class PktCount():
 recentdevs = []
 ips = []
 alldevs = []
+visited = []
 track = {}
 actualcolors = {
     'red' : 'brown2',
@@ -75,14 +76,10 @@ pktnum = 0
 pktcounting = PktCount()
 
 def network_DB(p,q):
-    
-        #Save packet information in database
-    network = network_info(p)
-    result = network_activity(q)
-    if result:
-       print("Packet Information is Saved")
-    if network:
-        print("Network Information is Saved")
+    #Save packet information in database
+    network_info(p)
+    network_activity(q)
+  
 
 def print_packets(pcap):
     for timestamp, buf in pcap:
@@ -189,9 +186,10 @@ def print_packets(pcap):
         except resolver.NXDOMAIN:
             try:
                 pkt.hostname = str(socket.gethostbyaddr(pkt.src)[0])
-            #pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
             except:
                 pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])
+        
+        #tuples to insert in DB
         packet_info = (
             pkt.src, #IP Address
             pkt.hostname, #NetworkNameSSID
@@ -199,7 +197,7 @@ def print_packets(pcap):
             pkt.ts, #timeStamp
             pkt.macsrc, #source
             pkt.macdst, #destination 
-        )
+            )
         network_inf = (
             pkt.hostname, #NetworkNameSSID
             pkt.src #IP Address
@@ -207,19 +205,6 @@ def print_packets(pcap):
         pkt_list.append(pkt)
         network_DB(network_inf,packet_info)
         
-'''
-        domain_address = reversename.from_address(pkt.src)
-        if pkt.ipv == 'IP6':
-            try:
-                pkt.hostname = str(socket.gethostbyaddr(pkt.src))
-        elif pkt.ipv == 'IP':
-            try:
-                pkt.hostname = str(resolver.resolve(domain_address, 'PTR')[0])
-            except resolver.NXDOMAIN:
-                pkt.hostname = str(socket.getnameinfo((pkt.src, 0), 0)[0])'''
-
-
-
 def write_packets(writer):
     pc = pcap.pcap()
     counter = 0
